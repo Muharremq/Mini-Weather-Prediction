@@ -1,33 +1,42 @@
 import socket
 
-# Sunucu Bağlantı Bilgileri
+# Server Connection Information
 HOST = "localhost"
 PORT = 8888
 
-# İstemci Soketini Oluşturma
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((HOST, PORT))
+def main():
+    """It connects to the server, gets predictions and displays the results."""
+    
+    # Create connection to server
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((HOST, PORT))
 
-# Sunucudan şehir bilgisini al
-message = client.recv(1024).decode()
-print(message)
+    # Get city information from server
+    message = client.recv(1024).decode()
+    print(message)
 
-while True:
-    # Kullanıcıdan tahmin al
-    guess = input("Sıcaklık tahmininizi girin (veya 'END' yazarak çıkın): ")
+    while True:
+        # Get predictions from user
+        guess = input("Enter your temperature estimate (or exit by typing 'END'):")
 
-    client.send(guess.encode())
+        # If the user wants to exit
+        if guess.upper() == "END":
+            client.send(guess.encode())
+            print("The connection was closed.")
+            break
 
-    if guess.upper() == "END":
-        print("Bağlantı kapatıldı.")
-        break
+        # Send prediction to server
+        client.send(guess.encode())
 
-    # Sunucudan geri bildirimi al
-    response = client.recv(1024).decode()
-    print(response)
+        # Get feedback from server
+        response = client.recv(1024).decode()
+        print(response)
 
-    # Doğru tahmin yapıldıysa çık
-    if "Doğru tahmin" in response or "3 tahmin hakkınız bitti" in response:
-        break
+        # If you guessed correctly or if you have 3 chances, you will exit.
+        if "Correct guess" in response or "Your 3 guesses are over." in response:
+            break
 
-client.close()
+    client.close()
+
+if __name__ == "__main__":
+    main()
